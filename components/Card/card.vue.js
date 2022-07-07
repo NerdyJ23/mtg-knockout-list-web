@@ -2,11 +2,10 @@ Vue.component('mtg-card', {
 	template: `
 	<v-card>
 		<v-img
-		:src="img"
 		>
 		
 		</v-img>
-		<v-card-footer> 1 of 2</v-card-footer>
+		<v-card-actions> 1 of 2</v-card-actions>
 	</v-card>
 	`	
 	,props: {
