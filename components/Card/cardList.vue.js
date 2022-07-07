@@ -1,42 +1,34 @@
 Vue.component('card-list', {
 	template: `
-	<div>
-		<loading ref="loading"></loading>
-	</div>
+<div>
+	<template v-for="(card,index) in cardsList">
+		<v-row v-if="index % 3 === 0" dense>
+			<v-col cols="4" v-if="typeof cardsList[index] !== 'undefined'">
+				{{cardsList[index].name}}
+			</v-col>
+			<v-col cols="4" v-if="typeof cardsList[index + 1] !== 'undefined'">
+				{{cardsList[index + 1].name}}
+			</v-col>
+			<v-col cols="4" v-if="typeof cardsList[index + 2] !== 'undefined'">
+				{{cardsList[index + 2].name}}
+			</v-col>
+		</v-row>
+	</template>
+</div>
 	`
+	,props: {
+		cards: {
+			type:Array,
+			required:true
+		}
+	}
 	,mounted: function () {
-		// this.getSetList();
+		console.log('hello cards!');
+		console.log(this.cards);
 	}
 	,data: function() {
 		return {
-			cards: {
-				list:[],
-				name: 'EMPTY',
-				count: 0,
-			},
-			filters: {}
-		}
-	}
-	,methods: {
-		getSetList() {
-			this.loading();
-			fetch("https://api.scryfall.com/sets")
-			.then(response => {
-				if(response.status === 200) {
-					return response.json();
-				}
-			}).then(data => {
-				console.log(data.data);
-				this.list = data.data;
-				this.loaded();
-			})
-		},
-
-		loading() {
-			this.$refs.loading.show = true;
-		},
-		loaded() {
-			this.$refs.loading.show = false;
+			cardsList: this.cards
 		}
 	}
 })
