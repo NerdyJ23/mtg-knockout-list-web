@@ -1,41 +1,104 @@
 Vue.component('card-list', {
 	template: `
-<div>
-	<template v-for="(card,index) in cardsList" >
+<div class="py-6">
+	<template v-for="(card,index) in cards">
 		<v-row v-if="index % 3 === 0" dense>
-			<v-col cols="4" v-if="typeof getCard(index ) !== 'undefined'">
-				<mtg-card :card="getCard(index)"></mtg-card>
-			</v-col>
-			<v-col cols="4" v-if="typeof getCard(index + 1) !== 'undefined'">
-				<mtg-card :card="getCard(index + 1)"></mtg-card>
-			</v-col>
-			<v-col cols="4" v-if="typeof getCard(index + 2) !== 'undefined'">
-				<mtg-card :card="getCard(index + 2)"></mtg-card>
+			<v-col v-for="n in 6" class="px-4 d-flex align-center justify-center">
+				<template v-if="typeof getCard(index + n - 1) !== 'undefined'">
+					<mtg-card ref="card" :card="getCard(index + n - 1)" :key="cards.collector_number"></mtg-card>				
+				</template>
 			</v-col>
 		</v-row>
 	</template>
-	<template v-if="cardsList.length <= 0">
+	<template v-if="cards.length <= 0">
 		No cards in set!
 	</template>
 </div>
 	`
-	,props: {
-		cards: {
-			type:Array,
-			required:true
-		}
-	}
+	,inject: ["isCached","getCache","setCache","loading","loaded"]
 	,mounted: function () {
-		console.log('loaderd cards');
+		this.reset();
 	}
 	,data: function() {
 		return {
-			cardsList: this.cards
+			cards: [],
+			setUrl: '',
 		}
 	}
 	,methods: {
 		getCard(card) {
-			return this.cardsList[card];
+			return this.cards[card];
+		},
+		reset() {
+			this.cards = [];
+		},
+		getCardList(set) {
+			this.setUrl = set;
+			this.loading();
+
+			if(this.isCached(this.setUrl)) {
+				console.log("loading cards from cache...");
+
+				const today = new Date();
+				const cached = new Date(this.getCache(this.setUrl).meta);
+				const diff = (today.getTime() - cached.getTime()) / (1000 * 3600 * 24);
+
+				if(diff > 1) //check for new set once the cache is a day old
+				{
+					console.log("Updating cards list");
+					this.downloadCards(this.setUrl);
+				} else {
+					this.cards = this.getCache(this.setUrl).list;
+					this.sortCards();
+					this.loaded();
+				}
+			}
+			else {
+				console.log("downloading cards");
+				this.downloadCards(this.setUrl);
+			}
+		},
+		downloadCards(set) {
+			fetch(set)
+			.then(response => {
+				if(response.status === 200) {
+					return response.json();
+				} else {
+					throw response;
+				}
+			}).then(data => {
+				for(let i in data.data) {
+					this.cards.push(data.data[i]);
+				}
+				if(data.has_more) {
+					/*Rate Limits and Good Citizenship
+					We kindly ask that you insert 50 – 100 milliseconds of delay between the requests you send 
+					to the server at api.scryfall.com. (i.e., 10 requests per second on average).*/
+					setTimeout(function(){},100);
+					this.downloadCards(data.next_page);
+
+				} else { //when all are loaded
+					console.log('set loaded');
+					this.setCache(this.setUrl,{
+						list: this.cards,
+						meta: new Date()});
+					this.sortCards();
+					this.loaded();
+				}
+			}).catch(error => {
+				console.error(error);
+				this.sortCards();
+				this.loaded();
+			})
+		},
+		sortCards() {
+			this.cards.sort(function (a,b) {
+				return a.collector_number > b.collector_number;
+			});
+		},
+		load(set) {
+			this.reset();
+			Vue.nextTick(this.getCardList(set));
 		}
 	}
 })

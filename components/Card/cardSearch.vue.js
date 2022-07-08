@@ -9,6 +9,7 @@ Vue.component('card-search', {
             item-text="name"
             item-value="search_uri"
             @change="setSelected"
+			:disabled="sets.length == 0"
             >
                 <template v-slot:item="{item}">
                     <v-img
@@ -63,18 +64,14 @@ Vue.component('card-search', {
     {{selected}}
 </div>
 `
-    ,props: {
-        items: {
-            type: Array,
-            required: true
-        }
-    }
+	,inject: ["isCached","getCache","setCache","loading","loaded"]
     ,mounted: function () {
+		this.load();
         this.filterBy = this.filters;
     }
     ,data: function() {
         return {
-            sets: this.items,
+            sets: [],
             selected: '',
             filterBy: [],
             showFilters: false
@@ -83,9 +80,9 @@ Vue.component('card-search', {
     ,computed: {
         filters() {
             let options = [];
-            this.sets.forEach(items => {
-                if (options.indexOf(items.set_type) === -1) {
-                    options.push(items.set_type);
+            this.sets.forEach(sets => {
+                if (options.indexOf(sets.set_type) === -1) {
+                    options.push(sets.set_type);
                 }
             });
             return options;
@@ -112,6 +109,31 @@ Vue.component('card-search', {
         },
         setSelected() {
             this.$emit('setSelected',this.selected);
-        }
+        },
+		load() {
+			this.loading();
+
+			if(this.isCached("setList")) {
+				console.log("loading set from cache...");
+				const today = new Date();
+				const cached = new Date(this.getCache("setList").meta);
+				const diff = (today.getTime() - cached.getTime()) / (1000 * 3600 * 24);
+				// console.log(JSON.parse(window.localStorage.getItem("setList")));
+				if(diff > 1) //check for new set once the cache is a day old
+				{
+					console.log("Updating set list");
+					this.downloadSetList()
+					.then(this.loaded());
+				} else {
+					this.sets = this.getCache("setList").list;
+					this.loaded();
+				}
+			}
+			else {
+				console.log("No setlist cached, downloading...");
+				this.downloadSetList()
+				.then(this.loaded());
+			}
+		}
     }
 })
