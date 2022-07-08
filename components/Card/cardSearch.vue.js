@@ -1,7 +1,7 @@
 Vue.component('card-search', {
     template: `
 <div class="pa-4">
-    <v-row>
+    <v-row dense>
         <v-col cols="8">
             <v-select
             v-model="selected"
@@ -25,7 +25,7 @@ Vue.component('card-search', {
             </v-select>
         </v-col>
         <v-col cols="4">
-            <v-btn fab @click="showFilters = !showFilters">help</v-btn>
+            <v-btn fab @click="showFilters = !showFilters"><v-icon>mdi-filter-variant</v-icon></v-btn>
             <template v-for="(category,index) in filters" v-if="showFilters">
                 <v-row v-if="index % 3 === 0" dense>
                     <v-col cols="4" v-if="typeof filters[index] !== 'undefined'">

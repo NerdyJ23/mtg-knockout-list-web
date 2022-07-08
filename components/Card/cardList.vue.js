@@ -1,18 +1,21 @@
 Vue.component('card-list', {
 	template: `
 <div>
-	<template v-for="(card,index) in cardsList">
+	<template v-for="(card,index) in cardsList" >
 		<v-row v-if="index % 3 === 0" dense>
-			<v-col cols="4" v-if="typeof cardsList[index] !== 'undefined'">
-				{{cardsList[index].name}}
+			<v-col cols="4" v-if="typeof getCard(index ) !== 'undefined'">
+				<mtg-card :card="getCard(index)"></mtg-card>
 			</v-col>
-			<v-col cols="4" v-if="typeof cardsList[index + 1] !== 'undefined'">
-				{{cardsList[index + 1].name}}
+			<v-col cols="4" v-if="typeof getCard(index + 1) !== 'undefined'">
+				<mtg-card :card="getCard(index + 1)"></mtg-card>
 			</v-col>
-			<v-col cols="4" v-if="typeof cardsList[index + 2] !== 'undefined'">
-				{{cardsList[index + 2].name}}
+			<v-col cols="4" v-if="typeof getCard(index + 2) !== 'undefined'">
+				<mtg-card :card="getCard(index + 2)"></mtg-card>
 			</v-col>
 		</v-row>
+	</template>
+	<template v-if="cardsList.length <= 0">
+		No cards in set!
 	</template>
 </div>
 	`
@@ -23,12 +26,16 @@ Vue.component('card-list', {
 		}
 	}
 	,mounted: function () {
-		console.log('hello cards!');
-		console.log(this.cards);
+		console.log('loaderd cards');
 	}
 	,data: function() {
 		return {
 			cardsList: this.cards
+		}
+	}
+	,methods: {
+		getCard(card) {
+			return this.cardsList[card];
 		}
 	}
 })

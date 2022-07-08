@@ -3,9 +3,8 @@ Vue.component('main-page', {
 	<v-card class="mx-2">
 		<card-search v-if="hasSets" :items="sets" @setSelected="setChanged($event)"></card-search>
 		<v-select v-else></v-select>
-		<v-divider></v-divider>awddwa
-		<card-list v-if="hasCards" :cards="cards"></card-list>
-
+		<v-divider></v-divider>
+		<card-list :cards="cards" ref="cardList"></card-list>
 		<loading ref="loading"></loading>
 	</v-card>
 	`
@@ -58,13 +57,15 @@ Vue.component('main-page', {
 			})
 		},
 		setChanged(set) {
-			this.setUrl = set;
 			this.cards = [];
+			this.setUrl = set;
 			this.loading();
 			if(this.isCached(this.setUrl)) {
 				console.log("loading cards from cache...");
 				const today = new Date();
 				const cached = new Date(this.getCache(this.setUrl).meta);
+				console.log("cached set items");
+				console.log(this.getCache(this.setUrl));
 				const diff = (today.getTime() - cached.getTime()) / (1000 * 3600 * 24);
 				// console.log(JSON.parse(window.localStorage.getItem("setList")));
 				if(diff > 1) //check for new set once the cache is a day old
@@ -73,6 +74,7 @@ Vue.component('main-page', {
 					this.loadSet(this.setUrl);
 				} else {
 					this.cards = this.getCache(this.setUrl).list;
+					this.setCards();
 					this.loaded();
 				}
 				console.log(this.cards);
@@ -95,13 +97,18 @@ Vue.component('main-page', {
 		isCached(key) {
 			return this.getCache(key) !== null;
 		},
+		setCards() {
+			this.cards.sort(function (a,b) {
+				return a.collector_number > b.collector_number;
+			});
+			this.$refs.cardList.cardsList = this.cards;
+		},
 		loadSet(set) {
 			fetch(set)
 			.then(response => {
 				if(response.status === 200) {
 					return response.json();
 				} else {
-					this.loaded();
 					throw response;
 				}
 			}).then(data => {
@@ -116,17 +123,23 @@ Vue.component('main-page', {
 					this.loadSet(data.next_page);
 
 				} else { //when all are loaded
+					console.log('set loaded');
 					this.setCache(this.setUrl,{
 						list: this.cards,
 						meta: new Date()});
+						this.setCards();
+
 					this.loaded();
+
 				}
 				console.log('set loading');
 				console.log(data);
+			}).catch(error => {
+				console.error(error);
+				this.cards = [];
+				this.setCards();
+				this.loaded();
 			})
-		},
-		loadCards() {
-
 		},
 		loading() {
 			this.$refs.loading.show = true;
@@ -148,6 +161,13 @@ Vue.component('main-page', {
 				return this.cards.length;
 			} catch {
 				return 0;
+			}
+		}
+	}
+	,watch: {
+		cards: function(oldVal, newVal) {
+			if(this.cards.length > 0) {
+
 			}
 		}
 	}
