@@ -16,21 +16,6 @@ Vue.component('main-page', {
 		}
 	}
 	,methods: {
-		async downloadSetList() {
-			fetch("https://api.scryfall.com/sets")
-			.then(response => {
-				if(response.status === 200) {
-					return response.json();
-				}
-			}).then(data => {
-				//cache the data to reduce api calls
-				this.setCache("setList",{
-					list: data.data,
-					meta: new Date()
-				});
-				this.sets = data.data;
-			})
-		},
 		setChanged(set) {
 			this.$refs.cardList.load(set);
 		},
