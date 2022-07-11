@@ -1,11 +1,11 @@
 Vue.component('card-list', {
 	template: `
-<div class="py-6">
+<div class="py-6" v-if="cardsLoaded">
 	<template v-for="(card,index) in cards">
 		<v-row v-if="index % 3 === 0" dense>
 			<v-col v-for="n in 6" class="px-4 d-flex align-center justify-center">
 				<template v-if="typeof getCard(index + n - 1) !== 'undefined'">
-					<mtg-card ref="card" :card="getCard(index + n - 1)" :key="cards.collector_number"></mtg-card>				
+					<mtg-card ref="card" :card="getCard(index + n - 1)" :key="cards.collector_number+cards.name"></mtg-card>				
 				</template>
 			</v-col>
 		</v-row>
@@ -23,6 +23,7 @@ Vue.component('card-list', {
 		return {
 			cards: [],
 			setUrl: '',
+			cardsLoaded: false
 		}
 	}
 	,methods: {
@@ -31,6 +32,7 @@ Vue.component('card-list', {
 		},
 		reset() {
 			this.cards = [];
+			this.cardsLoaded = false;
 		},
 		getCardList(set) {
 			this.setUrl = set;
@@ -95,6 +97,19 @@ Vue.component('card-list', {
 			this.cards.sort(function (a,b) {
 				return a.collector_number > b.collector_number;
 			});
+			console.log('now is loaded');
+			this.cardsLoaded = true;
+		},
+		collateVariants() {
+			// for(let i in this.cards) {
+			// 	let vars = this.cards.find(this._sameName);
+			// 	console.log(vars);
+			// }
+		},
+		_sameName(toFind) {
+			// for(let i in this.cards) {
+			// 	return this.cards[i].name === toFind.name;
+			// }
 		},
 		load(set) {
 			this.reset();
