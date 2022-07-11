@@ -67,7 +67,6 @@ Vue.component('card-search', {
 	,inject: ["isCached","getCache","setCache","loading","loaded"]
     ,mounted: function () {
 		this.load();
-        this.filterBy = this.filters;
     }
     ,data: function() {
         return {
@@ -122,33 +121,39 @@ Vue.component('card-search', {
 				if(diff > 1) //check for new set once the cache is a day old
 				{
 					console.log("Updating set list");
-					this.downloadSetList()
-					.then(this.loaded());
+					this.downloadSetList();
 				} else {
 					this.sets = this.getCache("setList").list;
 					this.loaded();
+                    this.enableAllFilters();
 				}
 			}
 			else {
 				console.log("No setlist cached, downloading...");
-				this.downloadSetList()
-				.then(this.loaded());
+				this.downloadSetList();
 			}
 		},
-        async downloadSetList() {
+        downloadSetList() {
 			fetch("https://api.scryfall.com/sets")
 			.then(response => {
 				if(response.status === 200) {
 					return response.json();
 				}
+                this.loaded();
+                this.enableAllFilters();
 			}).then(data => {
 				//cache the data to reduce api calls
 				this.setCache("setList",{
 					list: data.data,
 					meta: new Date()
 				});
+                this.loaded();
+                this.enableAllFilters();
 				this.sets = data.data;
 			})
-		}
+		},
+        enableAllFilters() {
+            this.filterBy = this.filters;
+        }
     }
 })
